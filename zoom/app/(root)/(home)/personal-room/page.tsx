@@ -201,7 +201,8 @@ const PersonalRoom = () => {
           <div className="flex w-full flex-col gap-8 xl:max-w-[900px]">
             <Table 
               title="Topic" 
-              description={call.state?.custom?.description || `${user?.username || user?.firstName}'s Meeting Room`} 
+              // use a unicode escape for the apostrophe to avoid unescaped-entity linting
+              description={call.state?.custom?.description || `${user?.username || user?.firstName}\u2019s Meeting Room`} 
             />
             <Table title="Meeting ID" description={meetingId!} />
             <Table title="Invite Link" description={meetingLink} />
@@ -262,7 +263,8 @@ const PersonalRoom = () => {
       ) : (
         <div className="flex flex-col gap-5">
           <p className="text-lg text-sky-2">
-            You haven't created a personal room yet. Create one to have a permanent meeting space.
+            {/* escape the apostrophe to avoid react/no-unescaped-entities */}
+            You haven&apos;t created a personal room yet. Create one to have a permanent meeting space.
           </p>
           <Button 
             className="bg-blue-1 max-w-xs" 

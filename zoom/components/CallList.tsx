@@ -93,45 +93,60 @@ const CallList = ({ type }: { type: 'ended' | 'upcoming' | 'recordings' }) => {
   return (
     <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
       {calls && calls.length > 0 ? (
-        calls.map((meeting: Call | CallRecording) => (
-          <MeetingCard
-            key={(meeting as Call).id}
-            icon={
-              type === 'ended'
-                ? '/icons/previous.svg'
-                : type === 'upcoming'
-                  ? '/icons/upcoming.svg'
-                  : '/icons/recordings.svg'
-            }
-            title={
-              (meeting as Call).state?.custom?.description ||
-              (meeting as CallRecording).filename?.substring(0, 20) ||
-              'No Description'
-            }
-            date={
-              type === 'recordings'
-                ? (meeting as CallRecording).start_time?.toLocaleString('en-US', {
+        calls.map((meeting: Call | CallRecording, idx: number) => {
+          // Safe key for mixed arrays
+          const key =
+            ((meeting as Call).id as string | undefined) ??
+            ((meeting as CallRecording).filename as string | undefined) ??
+            idx;
+
+          // Title fallback
+          const title =
+            (meeting as Call).state?.custom?.description ||
+            (meeting as CallRecording).filename?.substring(0, 20) ||
+            'No Description';
+
+          // Date: handle recordings (string) vs calls (startsAt)
+          const date =
+            type === 'recordings'
+              ? (meeting as CallRecording).start_time
+                ? new Date((meeting as CallRecording).start_time as string).toLocaleString('en-US', {
                     timeZone: 'Asia/Karachi',
                     dateStyle: 'medium',
                     timeStyle: 'short',
                   })
-                : formatMeetingTime(meeting as Call)
-            }
-            isPreviousMeeting={type === 'ended'}
-            link={
-              type === 'recordings'
-                ? (meeting as CallRecording).url
-                : `${process.env.NEXT_PUBLIC_BASE_URL}/meeting/${(meeting as Call).id}`
-            }
-            buttonIcon1={type === 'recordings' ? '/icons/play.svg' : undefined}
-            buttonText={type === 'recordings' ? 'Play' : 'Start'}
-            handleClick={
-              type === 'recordings'
-                ? () => router.push(`${(meeting as CallRecording).url}`)
-                : () => router.push(`/meeting/${(meeting as Call).id}`)
-            }
-          />
-        ))
+                : 'Not Available'
+              : formatMeetingTime(meeting as Call);
+
+          const link =
+            type === 'recordings'
+              ? (meeting as CallRecording).url
+              : `${process.env.NEXT_PUBLIC_BASE_URL}/meeting/${(meeting as Call).id}`;
+
+          return (
+            <MeetingCard
+              key={key}
+              icon={
+                type === 'ended'
+                  ? '/icons/previous.svg'
+                  : type === 'upcoming'
+                  ? '/icons/upcoming.svg'
+                  : '/icons/recordings.svg'
+              }
+              title={title}
+              date={date}
+              isPreviousMeeting={type === 'ended'}
+              link={link}
+              buttonIcon1={type === 'recordings' ? '/icons/play.svg' : undefined}
+              buttonText={type === 'recordings' ? 'Play' : 'Start'}
+              handleClick={
+                type === 'recordings'
+                  ? () => router.push(`${(meeting as CallRecording).url}`)
+                  : () => router.push(`/meeting/${(meeting as Call).id}`)
+              }
+            />
+          );
+        })
       ) : (
         <h1 className="text-2xl font-bold text-white">{noCallsMessage}</h1>
       )}
